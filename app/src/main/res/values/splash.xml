@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.RickNMorty.Splash" parent="Theme.SplashScreen">
+
+        <item name="windowSplashScreenAnimatedIcon">@drawable/rick_morty_png</item>
+        <item name="postSplashScreenTheme">@style/Theme.RickNMorty</item>
+
+    </style>
+
+</resources>
