@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import orlo.ricknmorty.ricknmorty.ui.theme.RickAction
-import orlo.ricknmorty.ricknmorty.ui.theme.RickTextPrimary
+import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickAction
+import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickTextPrimary
 
 data class DataPoint(
     val title: String,

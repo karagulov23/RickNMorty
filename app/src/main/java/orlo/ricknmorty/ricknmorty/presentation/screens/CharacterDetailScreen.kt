@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,123 +29,135 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import coil.compose.SubcomposeAsyncImage
-import kotlinx.coroutines.delay
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import orlo.ricknmorty.network.ApiOperation
 import orlo.ricknmorty.network.KtorClient
 import orlo.ricknmorty.network.models.domain.Character
 import orlo.ricknmorty.ricknmorty.presentation.components.character.CharacterDetailsNamePlateComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPoint
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPointComponent
-import orlo.ricknmorty.ricknmorty.ui.theme.RickAction
+import orlo.ricknmorty.ricknmorty.presentation.screens.CharacterDetailViewModel
+import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickAction
+
+
+sealed interface CharacterDetailsViewState {
+    object Loading : CharacterDetailsViewState
+    data class Error(val message: String) : CharacterDetailsViewState
+    data class Success(
+        val character: Character,
+        val characterDataPoints: List<DataPoint>
+    ) : CharacterDetailsViewState
+}
+
 
 @Composable
 fun CharacterDetailsScreen(
-    ktorClient: KtorClient,
+    //ktorClient: KtorClient,
+    viewmodel: CharacterDetailViewModel = hiltViewModel(),
     characterId: Int,
     onEpisodeClicked: (Int) -> Unit
 ) {
-    var character by remember { mutableStateOf<Character?>(null) }
-    val characterDataPoints: List<DataPoint> by remember {
-        derivedStateOf {
-            buildList {
-                character?.let { character ->
-                    add(DataPoint("Last known location", character.location.name))
-                    add(DataPoint("Species", character.species))
-                    add(DataPoint("Gender", character.gender.displayName))
-                    character.type.takeIf { it.isNotEmpty() }?.let { type ->
-                        add(DataPoint("Type", type))
-                    }
-                    add(DataPoint("Origin", character.origin.name))
-                }
-            }
-        }
-    }
+    //var character by remember { mutableStateOf<Character?>(null) }
+
     LaunchedEffect(key1 = Unit, block = {
-        ktorClient.getCharacter(characterId)
-            .onSuccess {
-                character = it
-            }
-            .onFailure { exception ->
-                //exception handle
-            }
+        viewmodel.fetchCharacter(characterId)
     })
+
+    val state by viewmodel.stateFlow.collectAsState()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(all = 16.dp)
     ) {
-        if (character == null) {
-            item { LoadingState() }
-            return@LazyColumn
-        }
-        // Image
-        item {
-            SubcomposeAsyncImage(
-                model = character!!.imageUrl,
-                contentDescription = "Character image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(12.dp)),
-                loading = { LoadingState() }
-            )
-        }
+        when (val viewState = state) {
+            CharacterDetailsViewState.Loading -> item { LoadingState() }
+            is CharacterDetailsViewState.Error -> {}
+            is CharacterDetailsViewState.Success -> {
 
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+                // Image
+                item {
+                    SubcomposeAsyncImage(
+                        model = viewState.character.imageUrl,
+                        contentDescription = "Character image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp)),
+                        loading = { LoadingState() }
+                    )
+                }
 
-        // Name plate
-        item {
-            CharacterDetailsNamePlateComponent(
-                name = character!!.name,
-                status = character!!.status
-            )
-        }
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
-        // Data points
-        items(characterDataPoints) {
-            Spacer(modifier = Modifier.height(32.dp))
-            DataPointComponent(dataPoint = it)
-        }
-        item { Spacer(modifier = Modifier.height(32.dp)) }
-        // Button
-        item {
-            Column {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "Count of episodes: ${character?.episodeIds?.size}",
-                )
-                Text(
-                    text = "View all episodes",
-                    color = RickAction,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(horizontal = 32.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(12.dp)
+                // Name plate
+                item {
+                    CharacterDetailsNamePlateComponent(
+                        name = viewState.character.name,
+                        status = viewState.character.status
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+
+                // Data points
+                items(viewState.characterDataPoints) {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    DataPointComponent(dataPoint = it)
+                }
+                item { Spacer(modifier = Modifier.height(32.dp)) }
+                // Button
+                item {
+                    Column {
+                        Text(
+                            textAlign = TextAlign.Center,
+                            text = "Count of episodes: ${viewState.character.episodeIds.size}",
                         )
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable {
-                            onEpisodeClicked(characterId)
-                        }
-                        .padding(vertical = 8.dp)
-                        .fillMaxWidth()
-                )
+                        Text(
+                            text = "View all episodes",
+                            color = RickAction,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .padding(horizontal = 32.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.Black,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    onEpisodeClicked(characterId)
+                                }
+                                .padding(vertical = 8.dp)
+                                .fillMaxWidth()
+                        )
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(64.dp)) }
             }
+
+            else -> {}
         }
-        item { Spacer(modifier = Modifier.height(64.dp)) }
+
+
     }
 }
+
 @Composable
 fun LoadingState() {
     CircularProgressIndicator(
         modifier = Modifier
             .fillMaxSize()
             .padding(all = 128.dp),
-        color =  MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.primary
     )
 }

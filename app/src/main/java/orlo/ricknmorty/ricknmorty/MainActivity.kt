@@ -34,14 +34,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import orlo.ricknmorty.network.Character
 import orlo.ricknmorty.network.KtorClient
 import orlo.ricknmorty.network.models.domain.CharacterStatus
 import orlo.ricknmorty.ricknmorty.presentation.screens.CharacterEpisodeScreen
-import orlo.ricknmorty.ricknmorty.ui.theme.RickNMortyTheme
+import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickNMortyTheme
 import orlo.ricknmorty.ricknmorty.utils.asColor
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val ktorClient = KtorClient()
@@ -65,7 +67,6 @@ class MainActivity : ComponentActivity() {
                         NavHost(navController = navController, startDestination = "character_detail") {
                             composable("character_detail") {
                                 CharacterDetailsScreen(
-                                    ktorClient = ktorClient,
                                     characterId = 1
                                 ) {
                                     navController.navigate("character_episodes/$it")

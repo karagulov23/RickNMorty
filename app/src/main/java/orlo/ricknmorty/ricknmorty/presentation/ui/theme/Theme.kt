@@ -1,4 +1,4 @@
-package orlo.ricknmorty.ricknmorty.ui.theme
+package orlo.ricknmorty.ricknmorty.presentation.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

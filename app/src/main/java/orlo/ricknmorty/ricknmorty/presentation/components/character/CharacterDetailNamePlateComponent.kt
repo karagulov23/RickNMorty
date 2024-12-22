@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import orlo.ricknmorty.network.models.domain.CharacterStatus
-import orlo.ricknmorty.ricknmorty.ui.theme.RickAction
+import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickAction
 
 @Composable
 fun CharacterDetailsNamePlateComponent(name: String, status: CharacterStatus) {
