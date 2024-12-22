@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "RickNMorty"
 include(":app")
- 
+include(":network")

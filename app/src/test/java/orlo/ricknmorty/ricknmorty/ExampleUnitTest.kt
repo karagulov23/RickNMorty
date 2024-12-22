@@ -1,4 +1,4 @@
-package orlo.example.ricknmorty
+package orlo.ricknmorty.ricknmorty
 
 import org.junit.Test
 

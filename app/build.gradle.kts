@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    kotlin("kapt")
 }
 
 android {
@@ -50,6 +51,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":network"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -70,5 +72,16 @@ dependencies {
 
     // splash screen
     implementation("androidx.core:core-splashscreen:1.0.0")
+    //Ktor
+    implementation(libs.bundles.ktor)
+    //Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    //Compose Nav
+    implementation(libs.navigation.compose)
 
+
+}
+
+kapt {
+    correctErrorTypes = true
 }
