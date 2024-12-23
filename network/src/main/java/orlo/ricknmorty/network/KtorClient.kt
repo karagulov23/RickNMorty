@@ -16,14 +16,18 @@ import orlo.ricknmorty.network.models.domain.Character
 import orlo.ricknmorty.network.models.domain.CharacterPage
 import orlo.ricknmorty.network.models.domain.Episode
 import orlo.ricknmorty.network.models.domain.EpisodePage
+import orlo.ricknmorty.network.models.domain.Location
+import orlo.ricknmorty.network.models.domain.LocationPage
 import orlo.ricknmorty.network.models.remote.RemoteCharacter
 import orlo.ricknmorty.network.models.remote.RemoteCharacterPage
 import orlo.ricknmorty.network.models.remote.RemoteEpisode
 import orlo.ricknmorty.network.models.remote.RemoteEpisodePage
+import orlo.ricknmorty.network.models.remote.RemoteLocation
 import orlo.ricknmorty.network.models.remote.toDomainCharacter
 import orlo.ricknmorty.network.models.remote.toDomainCharacterPage
 import orlo.ricknmorty.network.models.remote.toDomainEpisode
 import orlo.ricknmorty.network.models.remote.toDomainEpisodePage
+import orlo.ricknmorty.network.models.remote.toDomainLocation
 
 
 class KtorClient {
@@ -55,9 +59,15 @@ class KtorClient {
         }
     }
 
-    suspend fun getCharacterByPage(pageNumber: Int): ApiOperation<CharacterPage> {
+    suspend fun getCharacterByPage(
+        pageNumber: Int,
+    ): ApiOperation<CharacterPage> {
         return safeApiCall {
-            client.get("character/?page=$pageNumber")
+            client.get("character") {
+                url {
+                    parameters.append("page", pageNumber.toString())
+                }
+            }
                 .body<RemoteCharacterPage>()
                 .toDomainCharacterPage()
         }
@@ -121,6 +131,33 @@ class KtorClient {
             exception = it
         }
 
+        return exception?.let { ApiOperation.Failure(it) } ?: ApiOperation.Success(data)
+    }
+
+    suspend fun searchAllCharactersByName(searchQuery: String): ApiOperation<List<Character>> {
+        val data = mutableListOf<Character>()
+        var exception: Exception? = null
+
+        getCharacterByPage(
+            pageNumber = 1,
+        ).onSuccess { firstPage ->
+            val totalPageCount = firstPage.info.pages
+            data.addAll(firstPage.characters)
+
+            repeat(totalPageCount - 1) { index ->
+                getCharacterByPage(
+                    pageNumber = index + 2,
+                ).onSuccess { nextPage ->
+                    data.addAll(nextPage.characters)
+                }.onFailure { error ->
+                    exception = error
+                }
+
+                if (exception != null) { return@onSuccess }
+            }
+        }.onFailure {
+            exception = it
+        }
         return exception?.let { ApiOperation.Failure(it) } ?: ApiOperation.Success(data)
     }
 

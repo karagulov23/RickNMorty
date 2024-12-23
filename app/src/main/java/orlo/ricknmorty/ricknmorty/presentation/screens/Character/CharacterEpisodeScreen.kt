@@ -21,6 +21,7 @@ import orlo.ricknmorty.network.models.domain.Episode
 import orlo.ricknmorty.ricknmorty.presentation.components.character.CharacterDetailsNamePlateComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.episode.EpisodeRowComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.episode.SeasonHeaderComponent
+import orlo.ricknmorty.ricknmorty.utils.ErrorState
 import orlo.ricknmorty.ricknmorty.utils.LoadingState
 
 @Composable

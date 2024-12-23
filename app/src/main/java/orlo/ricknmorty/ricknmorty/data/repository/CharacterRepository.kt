@@ -18,5 +18,8 @@ class CharacterRepository @Inject constructor(
     suspend fun fetchCharacter(characterId: Int): ApiOperation<Character> {
         return ktorClient.getCharacter(characterId)
     }
+
+    suspend fun fetchAllCharactersByName(searchQuery: String){
+    }
 }
 
