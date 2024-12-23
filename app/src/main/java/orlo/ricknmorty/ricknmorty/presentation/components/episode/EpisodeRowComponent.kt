@@ -1,5 +1,6 @@
 package orlo.ricknmorty.ricknmorty.presentation.components.episode
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +21,13 @@ import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPoint
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPointComponent
 
 @Composable
-fun EpisodeRowComponent(episode: Episode) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+fun EpisodeRowComponent(
+    episode: Episode,
+) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+        ) {
             DataPointComponent(
                 dataPoint = DataPoint(
                     title = "Episode",

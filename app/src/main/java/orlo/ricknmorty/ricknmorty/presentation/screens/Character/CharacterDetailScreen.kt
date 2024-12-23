@@ -1,3 +1,5 @@
+package orlo.ricknmorty.ricknmorty.presentation.screens.Character
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,11 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -30,23 +28,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import coil.compose.SubcomposeAsyncImage
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import orlo.ricknmorty.network.ApiOperation
-import orlo.ricknmorty.network.KtorClient
 import orlo.ricknmorty.network.models.domain.Character
 import orlo.ricknmorty.ricknmorty.presentation.components.character.CharacterDetailsNamePlateComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPoint
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPointComponent
-import orlo.ricknmorty.ricknmorty.presentation.screens.CharacterDetailViewModel
+import orlo.ricknmorty.ricknmorty.presentation.viewmodels.CharacterDetailViewModel
 import orlo.ricknmorty.ricknmorty.presentation.ui.theme.RickAction
-
+import orlo.ricknmorty.ricknmorty.utils.ErrorState
+import orlo.ricknmorty.ricknmorty.utils.LoadingState
 
 sealed interface CharacterDetailsViewState {
     object Loading : CharacterDetailsViewState
@@ -60,12 +50,10 @@ sealed interface CharacterDetailsViewState {
 
 @Composable
 fun CharacterDetailsScreen(
-    //ktorClient: KtorClient,
     viewmodel: CharacterDetailViewModel = hiltViewModel(),
     characterId: Int,
     onEpisodeClicked: (Int) -> Unit
 ) {
-    //var character by remember { mutableStateOf<Character?>(null) }
 
     LaunchedEffect(key1 = Unit, block = {
         viewmodel.fetchCharacter(characterId)
@@ -81,9 +69,8 @@ fun CharacterDetailsScreen(
     ) {
         when (val viewState = state) {
             CharacterDetailsViewState.Loading -> item { LoadingState() }
-            is CharacterDetailsViewState.Error -> {}
+            is CharacterDetailsViewState.Error -> item { ErrorState() }
             is CharacterDetailsViewState.Success -> {
-
                 // Image
                 item {
                     SubcomposeAsyncImage(
@@ -145,19 +132,9 @@ fun CharacterDetailsScreen(
                 item { Spacer(modifier = Modifier.height(64.dp)) }
             }
 
-            else -> {}
         }
 
 
     }
 }
 
-@Composable
-fun LoadingState() {
-    CircularProgressIndicator(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 128.dp),
-        color = MaterialTheme.colorScheme.primary
-    )
-}

@@ -13,11 +13,17 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import orlo.ricknmorty.network.models.domain.Character
+import orlo.ricknmorty.network.models.domain.CharacterPage
 import orlo.ricknmorty.network.models.domain.Episode
+import orlo.ricknmorty.network.models.domain.EpisodePage
 import orlo.ricknmorty.network.models.remote.RemoteCharacter
+import orlo.ricknmorty.network.models.remote.RemoteCharacterPage
 import orlo.ricknmorty.network.models.remote.RemoteEpisode
+import orlo.ricknmorty.network.models.remote.RemoteEpisodePage
 import orlo.ricknmorty.network.models.remote.toDomainCharacter
+import orlo.ricknmorty.network.models.remote.toDomainCharacterPage
 import orlo.ricknmorty.network.models.remote.toDomainEpisode
+import orlo.ricknmorty.network.models.remote.toDomainEpisodePage
 
 
 class KtorClient {
@@ -49,6 +55,16 @@ class KtorClient {
         }
     }
 
+    suspend fun getCharacterByPage(pageNumber: Int): ApiOperation<CharacterPage> {
+        return safeApiCall {
+            client.get("character/?page=$pageNumber")
+                .body<RemoteCharacterPage>()
+                .toDomainCharacterPage()
+        }
+    }
+
+
+
     suspend fun getEpisode(episodeId: Int): ApiOperation<Episode> {
         return safeApiCall {
             client.get("episode/$episodeId")
@@ -71,8 +87,46 @@ class KtorClient {
             }
         }
     }
+
+    suspend fun getEpisodesByPage(pageIndex: Int): ApiOperation<EpisodePage> {
+        return safeApiCall {
+            client.get("episode") {
+                url {
+                    parameters.append("page", pageIndex.toString())
+                }
+            }
+                .body<RemoteEpisodePage>()
+                .toDomainEpisodePage()
+        }
+    }
+
+    suspend fun getAllEpisodes(): ApiOperation<List<Episode>> {
+        val data = mutableListOf<Episode>()
+        var exception: Exception? = null
+
+        getEpisodesByPage(pageIndex = 1).onSuccess { firstPage ->
+            val totalPageCount = firstPage.info.pages
+            data.addAll(firstPage.episodes)
+
+            repeat(totalPageCount - 1) { index ->
+                getEpisodesByPage(pageIndex = index + 2).onSuccess { nextPage ->
+                    data.addAll(nextPage.episodes)
+                }.onFailure { error ->
+                    exception = error
+                }
+
+                if (exception != null) { return@onSuccess }
+            }
+        }.onFailure {
+            exception = it
+        }
+
+        return exception?.let { ApiOperation.Failure(it) } ?: ApiOperation.Success(data)
+    }
+
+
     private inline fun <T> safeApiCall(apiCall: () -> T): ApiOperation<T> {
-        return  try {
+        return try {
             ApiOperation.Success(data = apiCall())
         } catch (e: Exception) {
             ApiOperation.Failure(exception = e)
@@ -80,9 +134,9 @@ class KtorClient {
     }
 }
 
-sealed interface ApiOperation<T>{
-    data class Success<T>(val data: T): ApiOperation<T>
-    data class Failure<T>(val exception: Exception): ApiOperation<T>
+sealed interface ApiOperation<T> {
+    data class Success<T>(val data: T) : ApiOperation<T>
+    data class Failure<T>(val exception: Exception) : ApiOperation<T>
 
     fun <R> mapSuccess(transform: (T) -> R): ApiOperation<R> {
         return when (this) {
@@ -91,7 +145,7 @@ sealed interface ApiOperation<T>{
         }
     }
 
-    fun onSuccess(block: (T) -> Unit): ApiOperation<T> {
+    suspend fun onSuccess(block: suspend (T) -> Unit): ApiOperation<T> {
         if (this is Success) block(data)
         return this
     }
@@ -100,17 +154,4 @@ sealed interface ApiOperation<T>{
         if (this is Failure) block(exception)
         return this
     }
-
-}
-
-@Serializable
-data class Character(
-    val id: Int,
-    val name: String,
-    val origin: Origin,
-) {
-    @Serializable
-    data class Origin(
-        val name: String
-    )
 }

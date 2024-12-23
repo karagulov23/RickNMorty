@@ -1,6 +1,6 @@
-package orlo.ricknmorty.ricknmorty.presentation.screens
+package orlo.ricknmorty.ricknmorty.presentation.viewmodels
 
-import CharacterDetailsViewState
+import orlo.ricknmorty.ricknmorty.presentation.screens.Character.CharacterDetailsViewState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,21 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import orlo.ricknmorty.network.ApiOperation
-import orlo.ricknmorty.network.KtorClient
-import orlo.ricknmorty.network.models.domain.Character
+import orlo.ricknmorty.ricknmorty.data.repository.CharacterRepository
 import orlo.ricknmorty.ricknmorty.presentation.components.character.DataPoint
 import javax.inject.Inject
-
-
-class CharacterRepository @Inject constructor(
-    private val ktorClient: KtorClient
-) {
-    suspend fun fetchCharacter(characterId: Int): ApiOperation<Character> {
-        return ktorClient.getCharacter(characterId)
-    }
-}
-
 
 @HiltViewModel
 class CharacterDetailViewModel @Inject constructor(

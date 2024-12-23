@@ -1,6 +1,5 @@
-package orlo.ricknmorty.ricknmorty.presentation.screens
+package orlo.ricknmorty.ricknmorty.presentation.screens.Character
 
-import LoadingState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -22,6 +21,7 @@ import orlo.ricknmorty.network.models.domain.Episode
 import orlo.ricknmorty.ricknmorty.presentation.components.character.CharacterDetailsNamePlateComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.episode.EpisodeRowComponent
 import orlo.ricknmorty.ricknmorty.presentation.components.episode.SeasonHeaderComponent
+import orlo.ricknmorty.ricknmorty.utils.LoadingState
 
 @Composable
 fun CharacterEpisodeScreen(
